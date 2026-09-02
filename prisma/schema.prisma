@@ -1,0 +1,325 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ---------- Enums ----------
+
+enum Role {
+  student
+  admin
+  institution
+}
+
+enum EducationLevel {
+  SEE
+  PLUS2
+  DIPLOMA
+  BACHELOR
+  MASTER
+  OTHER
+}
+
+enum BudgetPreference {
+  LOW
+  MEDIUM
+  HIGH
+  ANY
+}
+
+enum InstitutionType {
+  SCHOOL
+  COLLEGE
+  UNIVERSITY
+  INSTITUTE
+}
+
+enum VerificationStatus {
+  VERIFIED
+  SECONDARY_VERIFIED
+  REVIEW_REQUIRED
+  UNVERIFIED
+}
+
+enum OpportunityVerificationStatus {
+  VERIFIED
+  SECONDARY_VERIFIED
+  REVIEW_REQUIRED
+  UNVERIFIED
+  EXPIRED
+}
+
+enum OpportunityType {
+  SCHOLARSHIP
+  ADMISSION
+}
+
+enum RuleOperator {
+  EQ
+  GTE
+  LTE
+  IN
+}
+
+enum ApplicationStatus {
+  INTERESTED
+  SAVED
+  PREPARING
+  READY
+  APPLIED
+  UNDER_REVIEW
+  SELECTED
+  NOT_SELECTED
+}
+
+enum SourceType {
+  OFFICIAL
+  SECONDARY
+  NEWS_SOCIAL
+}
+
+enum NotificationType {
+  DEADLINE
+  NEW_MATCH
+  APPLICATION
+  SYSTEM
+}
+
+enum ReportReason {
+  WRONG_DEADLINE
+  WRONG_ELIGIBILITY
+  EXPIRED
+  BROKEN_URL
+  WRONG_INSTITUTION
+  SUSPICIOUS
+  OTHER
+}
+
+enum ReportStatus {
+  NEW
+  IN_REVIEW
+  RESOLVED
+  REJECTED
+}
+
+// ---------- Models ----------
+
+model User {
+  id            String   @id @default(uuid())
+  email         String   @unique
+  passwordHash  String?  @map("password_hash")
+  role          Role     @default(student)
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  studentProfile StudentProfile?
+  applications   Application[]
+  notifications  Notification[]
+  reports        Report[]
+  auditLogs      AuditLog[] @relation("AuditActor")
+
+  @@map("user")
+}
+
+model StudentProfile {
+  id                    String            @id @default(uuid())
+  userId                String            @unique @map("user_id")
+  user                  User              @relation(fields: [userId], references: [id])
+  educationLevel        EducationLevel    @map("education_level")
+  institutionId         String?           @map("institution_id")
+  institution           Institution?      @relation(fields: [institutionId], references: [id])
+  stream                String?
+  academicScore         Decimal?          @map("academic_score")
+  province              String
+  district              String
+  municipality          String?
+  interests             String[]
+  careerGoals           String[]          @map("career_goals")
+  preferredLocations    String[]          @map("preferred_locations")
+  budgetPreference      BudgetPreference? @map("budget_preference")
+  scholarshipInterest   Boolean           @default(true) @map("scholarship_interest")
+  createdAt             DateTime          @default(now()) @map("created_at")
+  updatedAt             DateTime          @updatedAt @map("updated_at")
+
+  @@map("student_profile")
+}
+
+model Institution {
+  id                 String              @id @default(uuid())
+  name               String
+  type               InstitutionType
+  province           String
+  district           String
+  municipality       String?
+  affiliation        String?
+  officialUrl        String              @map("official_url")
+  phone              String?
+  email              String?
+  verificationStatus VerificationStatus  @map("verification_status")
+  lastVerifiedAt     DateTime            @map("last_verified_at")
+  createdAt          DateTime            @default(now()) @map("created_at")
+  updatedAt          DateTime            @updatedAt @map("updated_at")
+
+  studentProfiles StudentProfile[]
+  programs        Program[]
+  opportunities   Opportunity[]
+
+  @@map("institution")
+}
+
+model Program {
+  id              String         @id @default(uuid())
+  institutionId   String         @map("institution_id")
+  institution     Institution    @relation(fields: [institutionId], references: [id])
+  name            String
+  level           EducationLevel
+  faculty         String
+  durationMonths  Int            @map("duration_months")
+  feeAmount       Decimal?       @map("fee_amount")
+  createdAt       DateTime       @default(now()) @map("created_at")
+  updatedAt       DateTime       @updatedAt @map("updated_at")
+
+  @@map("program")
+}
+
+model Opportunity {
+  id                  String                          @id @default(uuid())
+  title               String
+  slug                String                          @unique
+  type                OpportunityType
+  providerId          String?                         @map("provider_id")
+  provider            Institution?                    @relation(fields: [providerId], references: [id])
+  educationLevel      EducationLevel                  @map("education_level")
+  field               String
+  description         String
+  eligibilitySummary  String                          @map("eligibility_summary")
+  benefits            String[]
+  deadline            DateTime?
+  applicationUrl      String                          @map("application_url")
+  sourceId            String                          @map("source_id")
+  source              Source                          @relation(fields: [sourceId], references: [id])
+  verificationStatus  OpportunityVerificationStatus   @map("verification_status")
+  lastVerifiedAt      DateTime                        @map("last_verified_at")
+  nextVerificationAt  DateTime                        @map("next_verification_at")
+  createdAt           DateTime                        @default(now()) @map("created_at")
+  updatedAt           DateTime                        @updatedAt @map("updated_at")
+
+  eligibilityRules EligibilityRule[]
+  applications     Application[]
+  reports          Report[]
+
+  @@map("opportunity")
+}
+
+model EligibilityRule {
+  id               String        @id @default(uuid())
+  opportunityId    String        @map("opportunity_id")
+  opportunity      Opportunity   @relation(fields: [opportunityId], references: [id])
+  ruleType         String        @map("rule_type")
+  operator         RuleOperator
+  value            String
+  sourceReference  String?       @map("source_reference")
+
+  @@map("eligibility_rule")
+}
+
+model CareerPath {
+  id                String   @id @default(uuid())
+  slug              String   @unique
+  title             String
+  overview          String
+  relevantSubjects  String[] @map("relevant_subjects")
+  relatedPrograms   String[] @map("related_programs")
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+
+  @@map("career_path")
+}
+
+model Application {
+  id             String            @id @default(uuid())
+  userId         String            @map("user_id")
+  user           User              @relation(fields: [userId], references: [id])
+  opportunityId  String            @map("opportunity_id")
+  opportunity    Opportunity       @relation(fields: [opportunityId], references: [id])
+  status         ApplicationStatus
+  notes          String?
+  deadline       DateTime?
+  createdAt      DateTime          @default(now()) @map("created_at")
+  updatedAt      DateTime          @updatedAt @map("updated_at")
+
+  checklistItems ApplicationChecklistItem[]
+
+  @@map("application")
+}
+
+model ApplicationChecklistItem {
+  id             String       @id @default(uuid())
+  applicationId  String       @map("application_id")
+  application    Application  @relation(fields: [applicationId], references: [id])
+  label          String
+  required       Boolean
+  completed      Boolean      @default(false)
+
+  @@map("application_checklist_item")
+}
+
+model Source {
+  id               String     @id @default(uuid())
+  organization     String
+  url              String
+  sourceType       SourceType @map("source_type")
+  authorityLevel   Int        @map("authority_level")
+  lastChecked      DateTime   @map("last_checked")
+  reliability      Decimal?
+
+  opportunities Opportunity[]
+
+  @@map("source")
+}
+
+model Notification {
+  id         String           @id @default(uuid())
+  userId     String           @map("user_id")
+  user       User             @relation(fields: [userId], references: [id])
+  type       NotificationType
+  message    String
+  read       Boolean          @default(false)
+  createdAt  DateTime         @default(now()) @map("created_at")
+
+  @@map("notification")
+}
+
+model Report {
+  id             String        @id @default(uuid())
+  userId         String?       @map("user_id")
+  user           User?         @relation(fields: [userId], references: [id])
+  opportunityId  String?       @map("opportunity_id")
+  opportunity    Opportunity?  @relation(fields: [opportunityId], references: [id])
+  institutionId  String?       @map("institution_id")
+  reason         ReportReason
+  details        String?
+  status         ReportStatus  @default(NEW)
+  createdAt      DateTime      @default(now()) @map("created_at")
+  updatedAt      DateTime      @updatedAt @map("updated_at")
+
+  @@map("report")
+}
+
+model AuditLog {
+  id             String   @id @default(uuid())
+  actorUserId    String   @map("actor_user_id")
+  actor          User     @relation("AuditActor", fields: [actorUserId], references: [id])
+  entityType     String   @map("entity_type")
+  entityId       String   @map("entity_id")
+  action         String
+  previousValue  Json?    @map("previous_value")
+  newValue       Json?    @map("new_value")
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  @@map("audit_log")
+}
