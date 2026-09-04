@@ -116,7 +116,7 @@ export async function POST(request: Request) {
   });
 
   const matches = opportunities
-    .forEach((opp: any) => {
+    .filter((opp: any) => {
       if (filters.educationLevel && opp.educationLevel !== filters.educationLevel) {
         return false;
       }
@@ -128,7 +128,7 @@ export async function POST(request: Request) {
       }
       return true;
     })
-    .forEach((opp: any) => {
+    .map((opp: any) => {
       const reasons: string[] = [];
 
       if (filters.educationLevel && opp.educationLevel === filters.educationLevel) {
