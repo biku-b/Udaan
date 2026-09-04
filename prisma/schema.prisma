@@ -235,6 +235,7 @@ model Opportunity {
   providerId          String?                         @map("provider_id")
   provider            Institution?                    @relation(fields: [providerId], references: [id])
   educationLevel      EducationLevel                  @map("education_level")
+  province            String                          @map("province")
   field               String
   description         String
   eligibilitySummary  String                          @map("eligibility_summary")
@@ -248,6 +249,7 @@ model Opportunity {
   nextVerificationAt  DateTime                        @map("next_verification_at")
   createdAt           DateTime                        @default(now()) @map("created_at")
   updatedAt           DateTime                        @updatedAt @map("updated_at")
+  isSaved             Boolean                       @default(false) @map("is_saved")
 
   eligibilityRules EligibilityRule[]
   applications     Application[]

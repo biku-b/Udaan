@@ -8,6 +8,7 @@ import { DUMMY_OPPORTUNITIES } from "@/lib/dummy-data";
 
 export default function AdmissionsPage() {
   const [activeFilters, setActiveFilters] = useState<FilterOptions>({});
+  const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
 
   const admissions = DUMMY_OPPORTUNITIES.filter(
     (item) => item.type === "ADMISSION"
@@ -39,6 +40,18 @@ export default function AdmissionsPage() {
     return true;
   });
 
+  const toggleSave = async (id: string) => {
+    setSavedIds((prev) => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+    await fetch(`/api/opportunities/${id}/save`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+    });
+  };
+
   return (
     <div className="min-h-screen bg-background py-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <header className="mb-8">
@@ -59,7 +72,12 @@ export default function AdmissionsPage() {
           {admissions.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {admissions.map((opp) => (
-                <OpportunityCard key={opp.id} {...opp} />
+                <OpportunityCard
+                  key={opp.id}
+                  {...opp}
+                  isSaved={savedIds.has(opp.id)}
+                  onSave={() => toggleSave(opp.id)}
+                />
               ))}
             </div>
           ) : (

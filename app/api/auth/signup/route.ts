@@ -15,7 +15,7 @@ export async function POST(req: Request) {
 
     if (!result.success) {
       return NextResponse.json(
-        { error: { code: "VALIDATION_ERROR", message: result.error.errors[0].message } },
+        { error: { code: "VALIDATION_ERROR", message: result.error.issues[0].message } },
         { status: 400 }
       );
     }
@@ -40,6 +40,21 @@ export async function POST(req: Request) {
         email,
         passwordHash,
         role: "student",
+      },
+    });
+
+    // Create student profile on signup
+    await prisma.studentProfile.create({
+      data: {
+        userId: user.id,
+        educationLevel: "SEE",
+        province: "",
+        district: "",
+        municipality: "",
+        interests: [],
+        careerGoals: [],
+        preferredLocations: [],
+        scholarshipInterest: true,
       },
     });
 

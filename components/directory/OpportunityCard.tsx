@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/Badge";
 import { VerificationBadge, VerificationStatus } from "@/components/directory/VerificationBadge";
 import { DeadlinePill } from "@/components/directory/DeadlinePill";
 import { MatchScoreBadge } from "@/components/directory/MatchScoreBadge";
+import { Button } from "@/components/ui/Button";
 
 export interface OpportunityCardProps {
   id: string;
@@ -19,6 +20,8 @@ export interface OpportunityCardProps {
   lastVerifiedAt?: string | Date;
   matchScore?: number | null;
   matchReasons?: string[];
+  isSaved?: boolean;
+  onSave?: () => Promise<void>;
 }
 
 export function OpportunityCard({
@@ -34,6 +37,8 @@ export function OpportunityCard({
   lastVerifiedAt,
   matchScore,
   matchReasons,
+  isSaved,
+  onSave,
 }: OpportunityCardProps) {
   const detailHref = type === "SCHOLARSHIP" ? `/scholarships/${slug}` : `/admissions/${slug}`;
 
@@ -88,6 +93,18 @@ export function OpportunityCard({
       <div className="mt-5 pt-4 border-t border-neutral-100 dark:border-neutral-800/60 flex items-center justify-between flex-wrap gap-2 text-xs">
         <VerificationBadge status={verificationStatus} lastVerifiedAt={lastVerifiedAt} />
         <DeadlinePill deadline={deadline} />
+        {isSaved ? (
+          <span className="text-neutral-500 text-[10px] font-medium">Saved</span>
+        ) : (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-[10px] py-1 px-2 rounded"
+            onClick={onSave}
+          >
+            Save
+          </Button>
+        )}
       </div>
     </div>
   );
