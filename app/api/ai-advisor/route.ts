@@ -50,7 +50,7 @@ export async function GET() {
   });
 
   const matches = opportunities
-    .map((opp) => {
+    .map((opp: any) => {
       const reasons: string[] = [];
 
       // Default reason when no filters
@@ -85,7 +85,7 @@ export async function GET() {
         matchReasons: reasons,
       };
     })
-    .sort((a, b) => b.matchScore - a.matchScore);
+    .sort((a: any, b: any) => b.matchScore - a.matchScore);
 
   return NextResponse.json(matches);
 }
@@ -116,7 +116,7 @@ export async function POST(request: Request) {
   });
 
   const matches = opportunities
-    .filter((opp) => {
+    .forEach((opp: any) => {
       if (filters.educationLevel && opp.educationLevel !== filters.educationLevel) {
         return false;
       }
@@ -128,7 +128,7 @@ export async function POST(request: Request) {
       }
       return true;
     })
-    .map((opp) => {
+    .forEach((opp: any) => {
       const reasons: string[] = [];
 
       if (filters.educationLevel && opp.educationLevel === filters.educationLevel) {
@@ -185,7 +185,7 @@ export async function POST(request: Request) {
         matchReasons: reasons,
       };
     })
-    .sort((a, b) => b.matchScore - a.matchScore);
+    .sort((a: any, b: any) => b.matchScore - a.matchScore);
 
   return NextResponse.json(matches);
 }
